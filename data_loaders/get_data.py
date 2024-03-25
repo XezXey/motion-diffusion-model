@@ -31,17 +31,18 @@ def get_collate_fn(name, hml_mode='train'):
         return all_collate
 
 
-def get_dataset(name, num_frames, split='train', hml_mode='train'):
+def get_dataset(name, num_frames, split='train', hml_mode='train', datapath="./dataset/humanml_opt.txt"):
     DATA = get_dataset_class(name)
     if name in ["humanml", "kit"]:
-        dataset = DATA(split=split, num_frames=num_frames, mode=hml_mode)
+        # dataset = DATA(split=split, num_frames=num_frames, mode=hml_mode)
+        dataset = DATA(split=split, num_frames=num_frames, mode=hml_mode, datapath=datapath)
     else:
         dataset = DATA(split=split, num_frames=num_frames)
     return dataset
 
 
-def get_dataset_loader(name, batch_size, num_frames, split='train', hml_mode='train'):
-    dataset = get_dataset(name, num_frames, split, hml_mode)
+def get_dataset_loader(name, batch_size, num_frames, split='train', hml_mode='train', datapath="./dataset/humanml_opt.txt"):
+    dataset = get_dataset(name, num_frames, split, hml_mode, datapath=datapath)
     collate = get_collate_fn(name, hml_mode)
 
     loader = DataLoader(

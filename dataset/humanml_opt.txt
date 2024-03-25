@@ -1,6 +1,7 @@
 ------------ Options -------------
 batch_size: 32
 checkpoints_dir: ./checkpoints
+data_root: ./dataset/HumanML3D
 dataset_name: t2m
 decomp_name: Decomp_SP001_SM001_H512
 dim_att_vec: 512

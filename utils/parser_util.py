@@ -61,14 +61,25 @@ def add_base_options(parser):
     group.add_argument("--device", default=0, type=int, help="Device id to use.")
     group.add_argument("--seed", default=10, type=int, help="For fixing random seed.")
     group.add_argument("--batch_size", default=64, type=int, help="Batch size during training.")
+    # My custom
+    group.add_argument("--datapath_txt", default='./dataset/humanml_opt.txt', type=str, help="Path to the txt file config.")
 
 
+# def add_diffusion_options(parser):
+#     group = parser.add_argument_group('diffusion')
+#     group.add_argument("--diffusion_steps", default=1000, type=int,
+#                        help="Number of diffusion steps (denoted T in the paper)")
+#     group.add_argument("--timestep_respacing", default='', 
+#                        help="Timestep respacing for reduce the number of steps.")
+    
 def add_diffusion_options(parser):
     group = parser.add_argument_group('diffusion')
     group.add_argument("--noise_schedule", default='cosine', choices=['linear', 'cosine'], type=str,
                        help="Noise schedule type")
     group.add_argument("--diffusion_steps", default=1000, type=int,
                        help="Number of diffusion steps (denoted T in the paper)")
+    group.add_argument("--timestep_respacing", default='', 
+                       help="Timestep respacing for reduce the number of steps.")
     group.add_argument("--sigma_small", default=True, type=bool, help="Use smaller sigma values.")
 
 
@@ -152,7 +163,7 @@ def add_sampling_options(parser):
                        help="Number of repetitions, per sample (text prompt/action)")
     group.add_argument("--guidance_param", default=2.5, type=float,
                        help="For classifier-free sampling - specifies the s parameter, as defined in the paper.")
-
+    group.add_argument("--sampling_with_grad", action='store_true', default=False,)
 
 def add_generate_options(parser):
     group = parser.add_argument_group('generate')
@@ -227,6 +238,7 @@ def generate_args():
     add_base_options(parser)
     add_sampling_options(parser)
     add_generate_options(parser)
+    # add_diffusion_options(parser)
     args = parse_and_load_from_model(parser)
     cond_mode = get_cond_mode(args)
 

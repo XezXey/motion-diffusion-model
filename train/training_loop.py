@@ -10,7 +10,7 @@ import torch
 from torch.optim import AdamW
 
 from diffusion import logger
-from utils import dist_util
+from utils import dist_util, model_util
 from diffusion.fp16_util import MixedPrecisionTrainer
 from diffusion.resample import LossAwareSampler, UniformSampler
 from tqdm import tqdm
@@ -68,7 +68,8 @@ class TrainLoop:
             self.mp_trainer.master_params, lr=self.lr, weight_decay=self.weight_decay
         )
         if self.resume_step:
-            self._load_optimizer_state()
+            pass
+            # self._load_optimizer_state()
             # Model was resumed, either due to a restart or a checkpoint
             # being specified at the command line.
 
@@ -106,11 +107,14 @@ class TrainLoop:
         if resume_checkpoint:
             self.resume_step = parse_resume_step_from_filename(resume_checkpoint)
             logger.log(f"loading model from checkpoint: {resume_checkpoint}...")
-            self.model.load_state_dict(
-                dist_util.load_state_dict(
-                    resume_checkpoint, map_location=dist_util.dev()
-                )
-            )
+            state_dict = torch.load(resume_checkpoint, map_location=dist_util.dev())
+            model_util.load_model_wo_clip(self.model, state_dict)
+            self.model.to(dist_util.dev())
+            # self.model.load_state_dict(
+            #     dist_util.load_state_dict(
+            #         resume_checkpoint, map_location=dist_util.dev()
+            #     )
+            # )
 
     def _load_optimizer_state(self):
         main_checkpoint = find_resume_checkpoint() or self.resume_checkpoint
@@ -165,6 +169,7 @@ class TrainLoop:
 
     def evaluate(self):
         if not self.args.eval_during_training:
+            print("[#] NO EVAL DURING TRAINING...")
             return
         start_eval = time.time()
         if self.eval_wrapper is not None:

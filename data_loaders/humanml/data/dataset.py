@@ -212,7 +212,6 @@ class Text2MotionDatasetV2(data.Dataset):
         self.pointer = 0
         self.max_motion_length = opt.max_motion_length
         min_motion_len = 40 if self.opt.dataset_name =='t2m' else 24
-
         data_dict = {}
         id_list = []
         with cs.open(split_file, 'r') as f:
@@ -225,7 +224,9 @@ class Text2MotionDatasetV2(data.Dataset):
         for name in tqdm(id_list):
             try:
                 motion = np.load(pjoin(opt.motion_dir, name + '.npy'))
+                print(f"[#] Motion length of {name} is {len(motion)}...")
                 if (len(motion)) < min_motion_len or (len(motion) >= 200):
+                    print(f"[#] Motion length of {name} is {len(motion)}... skipping...")
                     continue
                 text_data = []
                 flag = False
@@ -248,6 +249,7 @@ class Text2MotionDatasetV2(data.Dataset):
                         else:
                             try:
                                 n_motion = motion[int(f_tag*20) : int(to_tag*20)]
+                                print(n_motion)
                                 if (len(n_motion)) < min_motion_len or (len(n_motion) >= 200):
                                     continue
                                 new_name = random.choice('ABCDEFGHIJKLMNOPQRSTUVW') + '_' + name
@@ -271,7 +273,6 @@ class Text2MotionDatasetV2(data.Dataset):
                     length_list.append(len(motion))
             except:
                 pass
-
         name_list, length_list = zip(*sorted(zip(new_name_list, length_list), key=lambda x: x[1]))
 
         self.mean = mean
@@ -701,7 +702,13 @@ class TextOnlyDataset(data.Dataset):
         self.name_list = new_name_list
 
     def inv_transform(self, data):
-        return data * self.std + self.mean
+        if isinstance(data, np.ndarray):
+            return data * self.std + self.mean
+        elif isinstance(data, torch.Tensor):
+            return data * torch.tensor(self.std, device=data.device) + torch.tensor(self.mean, device=data.device)
+        else: 
+            raise ValueError("Data type not supported")
+        # return data * self.std + self.mean
 
     def __len__(self):
         return len(self.data_dict)
@@ -721,6 +728,7 @@ class TextOnlyDataset(data.Dataset):
 class HumanML3D(data.Dataset):
     def __init__(self, mode, datapath='./dataset/humanml_opt.txt', split="train", **kwargs):
         self.mode = mode
+        print("[#] Mode: ", self.mode)
         
         self.dataset_name = 't2m'
         self.dataname = 't2m'
@@ -730,6 +738,7 @@ class HumanML3D(data.Dataset):
         dataset_opt_path = pjoin(abs_base_path, datapath)
         device = None  # torch.device('cuda:4') # This param is not in use in this context
         opt = get_opt(dataset_opt_path, device)
+        # print(opt)
         opt.meta_dir = pjoin(abs_base_path, opt.meta_dir)
         opt.motion_dir = pjoin(abs_base_path, opt.motion_dir)
         opt.text_dir = pjoin(abs_base_path, opt.text_dir)

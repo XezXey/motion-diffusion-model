@@ -123,6 +123,7 @@ def main():
             dump_steps=None,
             noise=None,
             const_noise=False,
+            sampling_with_grad=args.sampling_with_grad,
         )
 
         # Recover XYZ *positions* from HumanML3D vector representation
@@ -248,6 +249,7 @@ def load_dataset(args, max_frames, n_frames):
                               batch_size=args.batch_size,
                               num_frames=max_frames,
                               split='test',
+                            #   split='train',
                               hml_mode='text_only')
     if args.dataset in ['kit', 'humanml']:
         data.dataset.t2m_dataset.fixed_length = n_frames

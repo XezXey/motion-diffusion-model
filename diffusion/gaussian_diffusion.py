@@ -612,6 +612,7 @@ class GaussianDiffusion:
         cond_fn_with_grad=False,
         dump_steps=None,
         const_noise=False,
+        sampling_with_grad=False,
     ):
         """
         Generate samples from the model.
@@ -652,6 +653,7 @@ class GaussianDiffusion:
             randomize_class=randomize_class,
             cond_fn_with_grad=cond_fn_with_grad,
             const_noise=const_noise,
+            sampling_with_grad=sampling_with_grad,
         )):
             if dump_steps is not None and i in dump_steps:
                 dump.append(deepcopy(sample["sample"]))
@@ -676,6 +678,7 @@ class GaussianDiffusion:
         randomize_class=False,
         cond_fn_with_grad=False,
         const_noise=False,
+        sampling_with_grad=False,
     ):
         """
         Generate samples from the model and yield intermediate samples from
@@ -714,7 +717,8 @@ class GaussianDiffusion:
                 model_kwargs['y'] = th.randint(low=0, high=model.num_classes,
                                                size=model_kwargs['y'].shape,
                                                device=model_kwargs['y'].device)
-            with th.no_grad():
+            # with th.no_grad():
+            with th.enable_grad() if sampling_with_grad else th.no_grad():
                 sample_fn = self.p_sample_with_grad if cond_fn_with_grad else self.p_sample
                 out = sample_fn(
                     model,
@@ -894,6 +898,7 @@ class GaussianDiffusion:
         cond_fn_with_grad=False,
         dump_steps=None,
         const_noise=False,
+        sampling_with_grad=False,
     ):
         """
         Generate samples from the model using DDIM.
@@ -921,6 +926,7 @@ class GaussianDiffusion:
             init_image=init_image,
             randomize_class=randomize_class,
             cond_fn_with_grad=cond_fn_with_grad,
+            sampling_with_grad=sampling_with_grad
         ):
             final = sample
         return final["sample"]
@@ -941,6 +947,7 @@ class GaussianDiffusion:
         init_image=None,
         randomize_class=False,
         cond_fn_with_grad=False,
+        sampling_with_grad=False,
     ):
         """
         Use DDIM to sample from the model and yield intermediate samples from
@@ -977,7 +984,8 @@ class GaussianDiffusion:
                 model_kwargs['y'] = th.randint(low=0, high=model.num_classes,
                                                size=model_kwargs['y'].shape,
                                                device=model_kwargs['y'].device)
-            with th.no_grad():
+            # with th.no_grad():
+            with th.enable_grad() if sampling_with_grad else th.no_grad():
                 sample_fn = self.ddim_sample_with_grad if cond_fn_with_grad else self.ddim_sample
                 out = sample_fn(
                     model,
