@@ -218,21 +218,34 @@ class Text2MotionDatasetV2(data.Dataset):
             for line in f.readlines():
                 id_list.append(line.strip())
         # id_list = id_list[:200]
-
+        motion_dir = [opt.motion_dir] * len(id_list)
+        text_dir = [opt.text_dir] * len(id_list)
+        
+        
+        if opt.finetune_with_mask:
+            self.finetune_extra_samples_name = []
+            with cs.open(opt.finetune_extra_samples_name, 'r') as f:
+                for line in f.readlines():
+                    id_list.append(line.strip())
+                    self.finetune_extra_samples_name.append(line.strip())
+        motion_dir = motion_dir + [opt.finetune_motion_dir] * len(self.finetune_extra_samples_name)
+        text_dir = text_dir + [opt.finetune_text_dir] * len(self.finetune_extra_samples_name)
+        
+        assert len(motion_dir) == len(id_list) == len(text_dir)
         new_name_list = []
         length_list = []
-        for name in tqdm(id_list):
+        for i, name in tqdm(enumerate(id_list)):
             try:
                 if 'cr7' in name:
                     print("CR7")
-                motion = np.load(pjoin(opt.motion_dir, name + '.npy'))
+                motion = np.load(pjoin(motion_dir[i], name + '.npy'))
                 print(f"[#] Motion length of {name} is {len(motion)}...")
                 if (len(motion)) < min_motion_len or (len(motion) >= 200):
                     print(f"[#] Motion length of {name} is {len(motion)}... skipping...")
                     continue
                 text_data = []
                 flag = False
-                with cs.open(pjoin(opt.text_dir, name + '.txt')) as f:
+                with cs.open(pjoin(text_dir[i], name + '.txt')) as f:
                     for line in f.readlines():
                         text_dict = {}
                         line_split = line.strip().split('#')
@@ -751,13 +764,16 @@ class HumanML3D(data.Dataset):
         opt.checkpoints_dir = pjoin(abs_base_path, opt.checkpoints_dir)
         opt.data_root = pjoin(abs_base_path, opt.data_root)
         opt.save_root = pjoin(abs_base_path, opt.save_root)
-        opt.meta_dir = './dataset'
         self.opt = opt
         
-        if self.opt.finetune_with_mask:
-            # read the list of filename that we want to mask out
-            with open(self.opt.finetune_extra_samples_name, 'r') as f:
-                self.finetune_extra_samples_name = f.read().split('\n')
+        # if self.opt.finetune_with_mask:
+        #     # read the list of filename that we want to mask out
+        #     with open(self.opt.finetune_extra_samples_name, 'r') as f:
+        #         self.finetune_extra_samples_name = f.read().split('\n')
+            # self.finetune_motion_dir = pjoin(self.opt.finetune_motion_dir, 'new_joint_vecs/')
+        # else: 
+        #     self.finetune_extra_samples_name = None
+        #     self.finetune_motion_dir = None
             
         print('Loading dataset %s ...' % opt.dataset_name)
 

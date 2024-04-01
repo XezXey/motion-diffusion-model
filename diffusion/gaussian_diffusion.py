@@ -1264,13 +1264,15 @@ class GaussianDiffusion:
         x_t = self.q_sample(x_start, t, noise=noise)
         
         #TODO: Masking if we want to input the clean signal in some dimension
-        if dataset.opt.finetune_with_mask:
+        finetune_with_mask = dataset.t2m_dataset.opt.finetune_with_mask
+        if finetune_with_mask:
+            mask_ratio = dataset.t2m_dataset.opt.finetune_clean_mask_ratio
             mask_idx = []
-            for name in dataset.finetune_extra_samples_name:
+            for name in dataset.t2m_dataset.finetune_extra_samples_name:
                 # print(name)
                 if name in model_kwargs['y']['motion_name']:
                     mask_idx.append(model_kwargs['y']['motion_name'].index(name))
-            input_mask, _ = gen_mask.gen_mask(mask_ratio=dataset.opt.finetune_clean_mask_ratio, shape=x_t.shape, mask_idx=mask_idx)
+            input_mask, _ = gen_mask.gen_mask(mask_ratio=mask_ratio, shape=x_t.shape, mask_idx=mask_idx)
             # exit()
             loss_mask, mask_idx = gen_mask.gen_mask(mask_ratio=0, shape=x_t.shape, mask_idx=mask_idx)
             input_mask = th.tensor(input_mask).to(x_t.device).to(th.bool)
@@ -1341,7 +1343,7 @@ class GaussianDiffusion:
             assert model_output.shape == target.shape == x_start.shape  # [bs, njoints, nfeats, nframes]
 
             # terms["rot_mse"] shape = [B]
-            if dataset.opt.finetune_with_mask:
+            if finetune_with_mask:
                 terms["rot_mse"] = self.masked_l2(target, model_output, loss_mask)  # mean_flat(rot_mse)
             else: 
                 terms["rot_mse"] = self.masked_l2(target, model_output, mask) # mean_flat(rot_mse)

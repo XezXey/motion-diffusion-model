@@ -1,7 +1,8 @@
 ------------ Options -------------
 batch_size: 32
 checkpoints_dir: ./checkpoints
-data_root: ./dataset/HumanML3D
+meta_dir: /home/mint/Dev/CR7/dataset_construction/HumanML3D/
+data_root: /home/mint/Dev/CR7/dataset_construction/HumanML3D/HumanML3D/
 dataset_name: t2m
 decomp_name: Decomp_SP001_SM001_H512
 dim_att_vec: 512
@@ -53,6 +54,8 @@ text_enc_mod: bigru
 tf_ratio: 0.4
 unit_length: 4
 finetune_with_mask: True
-finetune_clean_mask_ratio: 0
-finetune_extra_samples_name: ./training_config/cr7_mask_samples.txt
+finetune_clean_mask_ratio: 0.5
+finetune_extra_samples_name: /home/mint/Dev/CR7/motion_diffusion/motion-diffusion-model/dataset/Finetuning/cr7/cr7_mask_samples.txt
+finetune_motion_dir: /home/mint/Dev/CR7/motion_diffusion/motion-diffusion-model/dataset/Finetuning/cr7/new_joint_vecs/
+finetune_text_dir: /home/mint/Dev/CR7/motion_diffusion/motion-diffusion-model/dataset/Finetuning/cr7/texts/
 -------------- End ----------------
