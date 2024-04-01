@@ -52,6 +52,7 @@ save_latest: 500
 text_enc_mod: bigru
 tf_ratio: 0.4
 unit_length: 4
-finetune_with_mask: False
-finetune_clean_mask_ratio: 0.8
+finetune_with_mask: True
+finetune_clean_mask_ratio: 0
+finetune_extra_samples_name: ./training_config/cr7_mask_samples.txt
 -------------- End ----------------

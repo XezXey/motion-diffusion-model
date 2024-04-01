@@ -223,6 +223,8 @@ class Text2MotionDatasetV2(data.Dataset):
         length_list = []
         for name in tqdm(id_list):
             try:
+                if 'cr7' in name:
+                    print("CR7")
                 motion = np.load(pjoin(opt.motion_dir, name + '.npy'))
                 print(f"[#] Motion length of {name} is {len(motion)}...")
                 if (len(motion)) < min_motion_len or (len(motion) >= 200):
@@ -249,8 +251,9 @@ class Text2MotionDatasetV2(data.Dataset):
                         else:
                             try:
                                 n_motion = motion[int(f_tag*20) : int(to_tag*20)]
-                                print(n_motion)
+                                # print(n_motion)
                                 if (len(n_motion)) < min_motion_len or (len(n_motion) >= 200):
+                                    print(f"[#] Motion length of {name} is {len(n_motion)}... skipping...")
                                     continue
                                 new_name = random.choice('ABCDEFGHIJKLMNOPQRSTUVW') + '_' + name
                                 while new_name in data_dict:
@@ -271,7 +274,8 @@ class Text2MotionDatasetV2(data.Dataset):
                                        'text': text_data}
                     new_name_list.append(name)
                     length_list.append(len(motion))
-            except:
+            except Exception as e:
+                print(f"[#] Error in processing {name}... with \"{e}\" skipping...")
                 pass
         name_list, length_list = zip(*sorted(zip(new_name_list, length_list), key=lambda x: x[1]))
 
@@ -749,6 +753,12 @@ class HumanML3D(data.Dataset):
         opt.save_root = pjoin(abs_base_path, opt.save_root)
         opt.meta_dir = './dataset'
         self.opt = opt
+        
+        if self.opt.finetune_with_mask:
+            # read the list of filename that we want to mask out
+            with open(self.opt.finetune_extra_samples_name, 'r') as f:
+                self.finetune_extra_samples_name = f.read().split('\n')
+            
         print('Loading dataset %s ...' % opt.dataset_name)
 
         if mode == 'gt':

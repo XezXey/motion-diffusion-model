@@ -39,17 +39,17 @@ def gen_mask(mask_ratio, mask_idx, shape, num_joints=22):
         # Remove the mask_idx from the idx
         idx = np.delete(idx, mask_idx)
         idx = np.random.choice(idx, int(mask_ratio * shape[0]), replace=False)
-        mask_idx = np.concatenate((mask_idx, idx))
+        mask_idx = np.concatenate((mask_idx, idx)).astype(int)
         
-    # print(mask_idx)
-    mask[mask_idx, :, :, :] = f_mask
+    if len(mask_idx) > 0:
+        mask[mask_idx, :, :, :] = f_mask
     # print(mask.shape)
     # for m in range(mask.shape[0]):
     #     print(mask[m, :, :, 0:1].reshape(-1))
     #     print("=====================================")
         
     
-    return mask
+    return mask, mask_idx
     
 if __name__ == '__main__':
     shape = (10, 263, 1, 196)

@@ -54,6 +54,7 @@ HumanML3D	data_loaders/humanml/data/dataset.py	/^class HumanML3D(data.Dataset):$
 HumanOutputFormat	diffusion/logger.py	/^class HumanOutputFormat(KVWriter, SeqWriter):$/;"	c
 INFO	diffusion/logger.py	/^INFO = 20$/;"	v
 INITIAL_LOG_LOSS_SCALE	diffusion/fp16_util.py	/^INITIAL_LOG_LOSS_SCALE = 20.0$/;"	v
+INITIAL_LOG_LOSS_SCALE	train/finetune_training_loop.py	/^INITIAL_LOG_LOSS_SCALE = 20.0$/;"	v
 INITIAL_LOG_LOSS_SCALE	train/training_loop.py	/^INITIAL_LOG_LOSS_SCALE = 20.0$/;"	v
 InputProcess	model/mdm.py	/^class InputProcess(nn.Module):$/;"	c
 JOINTSTYPES	model/rotation2xyz.py	/^JOINTSTYPES = ["a2m", "a2mpl", "smpl", "vibe", "vertices"]$/;"	v
@@ -144,6 +145,7 @@ TextMotionMatchTrainer	data_loaders/humanml/networks/trainers.py	/^class TextMot
 TextOnlyDataset	data_loaders/humanml/data/dataset.py	/^class TextOnlyDataset(data.Dataset):$/;"	c
 TextVAEDecoder	data_loaders/humanml/networks/modules.py	/^class TextVAEDecoder(nn.Module):$/;"	c
 TimestepEmbedder	model/mdm.py	/^class TimestepEmbedder(nn.Module):$/;"	c
+TrainLoop	train/finetune_training_loop.py	/^class TrainLoop:$/;"	c
 TrainLoop	train/training_loop.py	/^class TrainLoop:$/;"	c
 TrainPlatform	train/train_platforms.py	/^class TrainPlatform:$/;"	c
 UESTC	data_loaders/a2m/uestc.py	/^class UESTC(Dataset):$/;"	c
@@ -239,6 +241,7 @@ __init__	model/rotation2xyz.py	/^    def __init__(self, device, dataset='amass')
 __init__	model/smpl.py	/^    def __init__(self, model_path=SMPL_MODEL_PATH, **kwargs):$/;"	m	class:SMPL
 __init__	motion_optimizer/motion_optimizer.py	/^    def __init__(self, params, lr=1e-3, thres=1e-1):$/;"	m	class:MotionOptimizer
 __init__	motion_optimizer/motion_optimizer.py	/^    def __init__(self, xt, device, lr=1e-3, thres=1e-1):$/;"	m	class:Motion2DOptimizer
+__init__	train/finetune_training_loop.py	/^    def __init__(self, args, train_platform, model, diffusion, data):$/;"	m	class:TrainLoop
 __init__	train/train_platforms.py	/^    def __init__(self, save_dir):$/;"	m	class:ClearmlPlatform
 __init__	train/train_platforms.py	/^    def __init__(self, save_dir):$/;"	m	class:NoPlatform
 __init__	train/train_platforms.py	/^    def __init__(self, save_dir):$/;"	m	class:TensorboardPlatform
@@ -267,6 +270,7 @@ __len__	data_loaders/humanml/utils/word_vectorizer.py	/^    def __len__(self):$/
 __str__	eval/a2m/recognition/models/stgcnutils/graph.py	/^    def __str__(self):$/;"	m	class:Graph	file:
 __str__	eval/unconstrained/models/stgcnutils/graph.py	/^    def __str__(self):$/;"	m	class:Graph	file:
 _angle_from_tan	utils/rotation_conversions.py	/^def _angle_from_tan($/;"	f
+_anneal_lr	train/finetune_training_loop.py	/^    def _anneal_lr(self):$/;"	m	class:TrainLoop
 _anneal_lr	train/training_loop.py	/^    def _anneal_lr(self):$/;"	m	class:TrainLoop
 _apply	model/mdm.py	/^    def _apply(self, fn):$/;"	m	class:MDM
 _axis_angle_rotation	utils/rotation_conversions.py	/^def _axis_angle_rotation(axis: str, angle):$/;"	f
@@ -282,9 +286,11 @@ _get_pos_ohot	data_loaders/humanml/utils/word_vectorizer.py	/^    def _get_pos_o
 _get_videopath	data_loaders/a2m/uestc.py	/^    def _get_videopath(self, action, view, subject, side):$/;"	m	class:UESTC
 _index_from_letter	utils/rotation_conversions.py	/^def _index_from_letter(letter: str):$/;"	f
 _load	data_loaders/a2m/dataset.py	/^    def _load(self, ind, frame_ix):$/;"	m	class:Dataset
+_load_and_sync_parameters	train/finetune_training_loop.py	/^    def _load_and_sync_parameters(self):$/;"	m	class:TrainLoop
 _load_and_sync_parameters	train/training_loop.py	/^    def _load_and_sync_parameters(self):$/;"	m	class:TrainLoop
 _load_joints3D	data_loaders/a2m/humanact12poses.py	/^    def _load_joints3D(self, ind, frame_ix):$/;"	m	class:HumanAct12Poses
 _load_joints3D	data_loaders/a2m/uestc.py	/^    def _load_joints3D(self, ind, frame_ix):$/;"	m	class:UESTC
+_load_optimizer_state	train/finetune_training_loop.py	/^    def _load_optimizer_state(self):$/;"	m	class:TrainLoop
 _load_optimizer_state	train/training_loop.py	/^    def _load_optimizer_state(self):$/;"	m	class:TrainLoop
 _load_rotvec	data_loaders/a2m/humanact12poses.py	/^    def _load_rotvec(self, ind, frame_ix):$/;"	m	class:HumanAct12Poses
 _load_rotvec	data_loaders/a2m/uestc.py	/^    def _load_rotvec(self, ind, frame_ix):$/;"	m	class:UESTC
@@ -371,6 +377,7 @@ camera_fitting_loss	visualize/joints2smpl/src/customloss.py	/^def camera_fitting
 camera_fitting_loss_3d	visualize/joints2smpl/src/customloss.py	/^def camera_fitting_loss_3d(model_joints, camera_t, camera_t_est,$/;"	f
 check_overflow	diffusion/fp16_util.py	/^def check_overflow(value):$/;"	f
 checkpoint	diffusion/nn.py	/^def checkpoint(func, inputs, params, flag):$/;"	f
+ckpt_file_name	train/finetune_training_loop.py	/^    def ckpt_file_name(self):$/;"	m	class:TrainLoop
 ckpt_file_name	train/training_loop.py	/^    def ckpt_file_name(self):$/;"	m	class:TrainLoop
 cleanexit	utils/misc.py	/^def cleanexit():$/;"	f
 clip_norm	data_loaders/humanml/networks/trainers.py	/^    def clip_norm(network_list):$/;"	m	class:CompTrainerV6
@@ -464,6 +471,7 @@ evaluate	eval/a2m/gru_eval.py	/^def evaluate(args, model, diffusion, data):$/;"	
 evaluate	eval/a2m/stgcn/evaluate.py	/^    def evaluate(self, model, loaders):$/;"	m	class:Evaluation
 evaluate	eval/a2m/stgcn_eval.py	/^def evaluate(args, model, diffusion, data):$/;"	f
 evaluate	eval/eval_humanact12_uestc.py	/^def evaluate(args, model, diffusion, data):$/;"	f
+evaluate	train/finetune_training_loop.py	/^    def evaluate(self):$/;"	m	class:TrainLoop
 evaluate	train/training_loop.py	/^    def evaluate(self):$/;"	m	class:TrainLoop
 evaluate_diversity	eval/eval_humanml.py	/^def evaluate_diversity(activation_dict, file, diversity_times):$/;"	f
 evaluate_fid	eval/eval_humanml.py	/^def evaluate_fid(eval_wrapper, groundtruth_loader, activation_dict, file):$/;"	f
@@ -482,6 +490,7 @@ extract_features	data_loaders/humanml/scripts/motion_process.py	/^def extract_fe
 face_joint_indx	data_loaders/humanml/scripts/motion_process.py	/^    face_joint_indx = [11, 16, 5, 8]$/;"	v
 fc_loss_rot_repr	diffusion/gaussian_diffusion.py	/^    def fc_loss_rot_repr(self, gt_xyz, pred_xyz, mask):$/;"	m	class:GaussianDiffusion
 file	visualize/joints2smpl/fit_seq.py	/^file = h5py.File(smpl_mean_file, 'r')$/;"	v
+find_resume_checkpoint	train/finetune_training_loop.py	/^def find_resume_checkpoint():$/;"	f
 find_resume_checkpoint	train/training_loop.py	/^def find_resume_checkpoint():$/;"	f
 fixseed	utils/fixseed.py	/^def fixseed(seed):$/;"	f
 foot_contact_loss_humanml3d	diffusion/gaussian_diffusion.py	/^    def foot_contact_loss_humanml3d(self, target, model_output):$/;"	m	class:GaussianDiffusion
@@ -525,6 +534,7 @@ forward	motion_optimizer/motion_optimizer.py	/^    def forward(self, x, target):
 forward	visualize/joints2smpl/src/prior.py	/^    def forward(self, module_input, *args):$/;"	m	class:L2Prior
 forward	visualize/joints2smpl/src/prior.py	/^    def forward(self, pose, betas):$/;"	m	class:MaxMixturePrior
 forward	visualize/joints2smpl/src/prior.py	/^    def forward(self, pose, with_global_pose=False):$/;"	m	class:SMPLifyAnglePrior
+forward_backward	train/finetune_training_loop.py	/^    def forward_backward(self, batch, cond):$/;"	m	class:TrainLoop
 forward_backward	train/training_loop.py	/^    def forward_backward(self, batch, cond):$/;"	m	class:TrainLoop
 forward_kinematics	data_loaders/humanml/common/skeleton.py	/^    def forward_kinematics(self, quat_params, root_pos, skel_joints=None, do_root_R=True):$/;"	m	class:Skeleton
 forward_kinematics_cont6d	data_loaders/humanml/common/skeleton.py	/^    def forward_kinematics_cont6d(self, cont6d_params, root_pos, skel_joints=None, do_root_R=True):$/;"	m	class:Skeleton
@@ -535,6 +545,7 @@ freeze_joints	utils/misc.py	/^def freeze_joints(x, joints_to_freeze):$/;"	f
 full_smpl_idx	visualize/joints2smpl/src/config.py	/^full_smpl_idx = range(24)$/;"	v
 func_wrapper	diffusion/logger.py	/^        def func_wrapper(*args, **kwargs):$/;"	f	function:profile.decorator_with_name
 gen_loader	eval/eval_humanml.py	/^    gen_loader = get_dataset_loader(name=args.dataset, batch_size=args.batch_size, num_frames=None, split=split, hml_mode='eval')$/;"	v
+gen_mask	data_loaders/humanml/scripts/gen_mask.py	/^def gen_mask(mask_ratio, mask_idx, shape, num_joints=22):$/;"	f
 gen_motion	sample/dno_optimize.py	/^        def gen_motion(xt, all_text):$/;"	f	function:main
 generate	data_loaders/humanml/networks/trainers.py	/^    def generate(self, word_emb, pos_ohot, cap_lens, m_lens, mov_len, dim_pose):$/;"	m	class:CompTrainerV6
 generate_args	utils/parser_util.py	/^def generate_args():$/;"	f
@@ -543,6 +554,7 @@ get_adjacency	eval/a2m/recognition/models/stgcnutils/graph.py	/^    def get_adja
 get_adjacency	eval/unconstrained/models/stgcnutils/graph.py	/^    def get_adjacency(self, strategy):$/;"	m	class:Graph
 get_args	sample/predict.py	/^def get_args():$/;"	f
 get_args_per_group_name	utils/parser_util.py	/^def get_args_per_group_name(parser, args, group_name):$/;"	f
+get_blob_logdir	train/finetune_training_loop.py	/^def get_blob_logdir():$/;"	f
 get_blob_logdir	train/training_loop.py	/^def get_blob_logdir():$/;"	f
 get_co_embeddings	data_loaders/humanml/networks/evaluator_wrapper.py	/^    def get_co_embeddings(self, word_embs, pos_ohot, cap_lens, motions, m_lens):$/;"	m	class:EvaluatorMDMWrapper
 get_co_embeddings	data_loaders/humanml/networks/evaluator_wrapper.py	/^    def get_co_embeddings(self, word_embs, pos_ohot, cap_lens, motions, m_lens):$/;"	m	class:EvaluatorModelWrapper
@@ -661,7 +673,9 @@ log	diffusion/logger.py	/^    def log(self, *args, level=INFO):$/;"	m	class:Logg
 log	diffusion/logger.py	/^def log(*args, level=INFO):$/;"	f
 log_file	eval/eval_humanml.py	/^    log_file = os.path.join(os.path.dirname(args.model_path), 'eval_humanml_{}_{}'.format(name, niter))$/;"	v
 log_likelihood	visualize/joints2smpl/src/prior.py	/^    def log_likelihood(self, pose, betas, *args, **kwargs):$/;"	m	class:MaxMixturePrior
+log_loss_dict	train/finetune_training_loop.py	/^def log_loss_dict(diffusion, ts, losses):$/;"	f
 log_loss_dict	train/training_loop.py	/^def log_loss_dict(diffusion, ts, losses):$/;"	f
+log_step	train/finetune_training_loop.py	/^    def log_step(self):$/;"	m	class:TrainLoop
 log_step	train/training_loop.py	/^    def log_step(self):$/;"	m	class:TrainLoop
 logkv	diffusion/logger.py	/^    def logkv(self, key, val):$/;"	m	class:Logger
 logkv	diffusion/logger.py	/^def logkv(key, val):$/;"	f
@@ -672,6 +686,7 @@ main	eval/eval_humanact12_uestc.py	/^def main():$/;"	f
 main	sample/dno_optimize.py	/^def main():$/;"	f
 main	sample/edit.py	/^def main():$/;"	f
 main	sample/generate.py	/^def main():$/;"	f
+main	train/finetune_mdm.py	/^def main():$/;"	f
 main	train/train_mdm.py	/^def main():$/;"	f
 make_master_params	diffusion/fp16_util.py	/^def make_master_params(param_groups_and_shapes):$/;"	f
 make_output_format	diffusion/logger.py	/^def make_output_format(format, ev_dir, log_suffix=""):$/;"	f
@@ -748,6 +763,7 @@ params	visualize/simplify_loc2rot.py	/^    params = parser.parse_args()$/;"	v	cl
 parents	data_loaders/humanml/common/skeleton.py	/^    def parents(self):$/;"	m	class:Skeleton
 parse_action	data_loaders/a2m/uestc.py	/^    def parse_action(self, path, return_int=True):$/;"	m	class:UESTC
 parse_and_load_from_model	utils/parser_util.py	/^def parse_and_load_from_model(parser):$/;"	f
+parse_resume_step_from_filename	train/finetune_training_loop.py	/^def parse_resume_step_from_filename(filename):$/;"	f
 parse_resume_step_from_filename	train/training_loop.py	/^def parse_resume_step_from_filename(filename):$/;"	f
 parsed_name	visualize/render_mesh.py	/^    parsed_name = os.path.basename(params.input_path).replace('.mp4', '').replace('sample', '').replace('rep', '')$/;"	v
 parser	visualize/joints2smpl/fit_seq.py	/^parser = argparse.ArgumentParser()$/;"	v
@@ -860,17 +876,21 @@ rotate	motion_optimizer/math_utils.py	/^def rotate(motion, angles):$/;"	f
 rotate_multiple_angles	motion_optimizer/math_utils.py	/^def rotate_multiple_angles(motion, hor_angles, ver_angles):$/;"	f
 rotation_6d_to_matrix	utils/rotation_conversions.py	/^def rotation_6d_to_matrix(d6: torch.Tensor) -> torch.Tensor:$/;"	f
 rotation_matrix	motion_optimizer/math_utils.py	/^def rotation_matrix(angles):$/;"	f
+run_loop	train/finetune_training_loop.py	/^    def run_loop(self):$/;"	m	class:TrainLoop
 run_loop	train/training_loop.py	/^    def run_loop(self):$/;"	m	class:TrainLoop
 run_mdm	run_mdm.py	/^def run_mdm(model_path, num_samples, seed, output_dir, input_text):$/;"	f
 run_mm	eval/eval_humanml.py	/^        run_mm = False$/;"	v
 run_mm	eval/eval_humanml.py	/^        run_mm = True$/;"	v
+run_step	train/finetune_training_loop.py	/^    def run_step(self, batch, cond):$/;"	m	class:TrainLoop
 run_step	train/training_loop.py	/^    def run_step(self, batch, cond):$/;"	m	class:TrainLoop
 sample	diffusion/resample.py	/^    def sample(self, batch_size, device):$/;"	m	class:ScheduleSampler
 save	data_loaders/humanml/networks/trainers.py	/^    def save(self, file_name, ep, total_it):$/;"	m	class:DecompTrainerV3
 save	data_loaders/humanml/networks/trainers.py	/^    def save(self, file_name, ep, total_it, sub_ep, sl_len):$/;"	m	class:CompTrainerV6
 save	data_loaders/humanml/networks/trainers.py	/^    def save(self, model_dir, epoch, niter):$/;"	m	class:LengthEstTrainer
 save	data_loaders/humanml/networks/trainers.py	/^    def save(self, model_dir, epoch, niter):$/;"	m	class:TextMotionMatchTrainer
+save	train/finetune_training_loop.py	/^    def save(self):$/;"	m	class:TrainLoop
 save	train/training_loop.py	/^    def save(self):$/;"	m	class:TrainLoop
+save_checkpoint	train/finetune_training_loop.py	/^        def save_checkpoint(params):$/;"	f	function:TrainLoop.save
 save_checkpoint	train/training_loop.py	/^        def save_checkpoint(params):$/;"	f	function:TrainLoop.save
 save_dir1	data_loaders/humanml/scripts/motion_process.py	/^    save_dir1 = '..\/dataset\/kit_mocap_dataset\/new_joints\/'$/;"	v
 save_dir2	data_loaders/humanml/scripts/motion_process.py	/^    save_dir2 = '..\/dataset\/kit_mocap_dataset\/new_joint_vecs\/'$/;"	v
@@ -895,6 +915,7 @@ set_level	diffusion/logger.py	/^def set_level(level):$/;"	f
 set_offset	data_loaders/humanml/common/skeleton.py	/^    def set_offset(self, offsets):$/;"	m	class:Skeleton
 setup	sample/predict.py	/^    def setup(self):$/;"	m	class:Predictor
 setup_dist	utils/dist_util.py	/^def setup_dist(device=0):$/;"	f
+shape	data_loaders/humanml/scripts/gen_mask.py	/^    shape = (10, 263, 1, 196)$/;"	v
 short_cut	data_loaders/humanml/networks/modules.py	/^    def short_cut(self, querys, keys):$/;"	m	class:AttLayer
 shuffle	data_loaders/a2m/dataset.py	/^    def shuffle(self):$/;"	m	class:Dataset
 simplify	visualize/simplify_loc2rot.py	/^    simplify = joints2smpl(device_id=params.device, cuda=params.cuda)$/;"	v	class:joints2smpl

@@ -26,6 +26,8 @@ def collate(batch):
         lenbatch = [b['lengths'] for b in notnone_batches]
     else:
         lenbatch = [len(b['inp'][0][0]) for b in notnone_batches]
+        
+    motionname_batch = [b['motion_name'] for b in notnone_batches]
 
 
     databatchTensor = collate_tensors(databatch)
@@ -33,7 +35,7 @@ def collate(batch):
     maskbatchTensor = lengths_to_mask(lenbatchTensor, databatchTensor.shape[-1]).unsqueeze(1).unsqueeze(1) # unqueeze for broadcasting
 
     motion = databatchTensor
-    cond = {'y': {'mask': maskbatchTensor, 'lengths': lenbatchTensor}}
+    cond = {'y': {'mask': maskbatchTensor, 'lengths': lenbatchTensor, 'motion_name':motionname_batch}}
 
     if 'text' in notnone_batches[0]:
         textbatch = [b['text'] for b in notnone_batches]

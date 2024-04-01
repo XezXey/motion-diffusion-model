@@ -1264,11 +1264,27 @@ class GaussianDiffusion:
         x_t = self.q_sample(x_start, t, noise=noise)
         
         #TODO: Masking if we want to input the clean signal in some dimension
-        if dataset.finetune_with_mask:
-            mask_idx = model_kwargs['y']['mask_idx']
-            input_mask = gen_mask.gen_mask(mask_ratio=dataset.opt.finetune_mask_ratio, shape=x_t.shape, mask_idx=mask_idx)
-            loss_mask = gen_mask.gen_mask(mask_ratio=0, shape=x_t.shape, mask_idx=mask_idx)
-            x_t = (x_t * ~input_mask) + (x_start * input_mask)
+        if dataset.opt.finetune_with_mask:
+            mask_idx = []
+            for name in dataset.finetune_extra_samples_name:
+                # print(name)
+                if name in model_kwargs['y']['motion_name']:
+                    mask_idx.append(model_kwargs['y']['motion_name'].index(name))
+            input_mask, _ = gen_mask.gen_mask(mask_ratio=dataset.opt.finetune_clean_mask_ratio, shape=x_t.shape, mask_idx=mask_idx)
+            # exit()
+            loss_mask, mask_idx = gen_mask.gen_mask(mask_ratio=0, shape=x_t.shape, mask_idx=mask_idx)
+            input_mask = th.tensor(input_mask).to(x_t.device).to(th.bool)
+            loss_mask = th.tensor(loss_mask).to(x_t.device).to(th.bool)
+            # print(model_kwargs['y']['motion_name'])
+            # print(mask_idx)
+            # if len(mask_idx) > 0:
+                # print(mask_idx)
+                # print(input_mask.shape)
+                # print(input_mask[0, :, :, 0:1].reshape(-1))
+                # print(input_mask[mask_idx[0], :, :, 0:1].reshape(-1))
+                # print(input_mask[mask_idx[0]+1, :, :, 0:1].reshape(-1))
+                # print(input_mask[mask_idx[0]-1, :, :, 0:1].reshape(-1))
+            x_t = (x_t * (~input_mask)) + (x_start * input_mask)
         else:
             # Used the default mask if not finetuning with 2D
             mask = mask
@@ -1325,7 +1341,7 @@ class GaussianDiffusion:
             assert model_output.shape == target.shape == x_start.shape  # [bs, njoints, nfeats, nframes]
 
             # terms["rot_mse"] shape = [B]
-            if dataset.opt.finetune_mask_ratio:
+            if dataset.opt.finetune_with_mask:
                 terms["rot_mse"] = self.masked_l2(target, model_output, loss_mask)  # mean_flat(rot_mse)
             else: 
                 terms["rot_mse"] = self.masked_l2(target, model_output, mask) # mean_flat(rot_mse)
