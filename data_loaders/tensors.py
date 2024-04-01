@@ -62,6 +62,7 @@ def t2m_collate(batch):
         'text': b[2], #b[0]['caption']
         'tokens': b[6],
         'lengths': b[5],
+        'motion_name': b[7],
     } for b in batch]
     return collate(adapted_batch)
 

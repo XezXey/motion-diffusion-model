@@ -297,6 +297,7 @@ class Text2MotionDatasetV2(data.Dataset):
     def __getitem__(self, item):
         idx = self.pointer + item
         data = self.data_dict[self.name_list[idx]]
+        motion_name = self.name_list[idx]
         motion, m_length, text_list = data['motion'], data['length'], data['text']
         # Randomly select a caption
         text_data = random.choice(text_list)
@@ -343,7 +344,7 @@ class Text2MotionDatasetV2(data.Dataset):
                                      ], axis=0)
         # print(word_embeddings.shape, motion.shape)
         # print(tokens)
-        return word_embeddings, pos_one_hots, caption, sent_len, motion, m_length, '_'.join(tokens)
+        return word_embeddings, pos_one_hots, caption, sent_len, motion, m_length, '_'.join(tokens), motion_name
 
 
 '''For use of training baseline'''

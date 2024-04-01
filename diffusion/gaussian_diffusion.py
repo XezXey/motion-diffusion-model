@@ -16,6 +16,7 @@ from copy import deepcopy
 from diffusion.nn import mean_flat, sum_flat
 from diffusion.losses import normal_kl, discretized_gaussian_log_likelihood
 from data_loaders.humanml.scripts import motion_process
+from data_loaders.humanml.scripts import gen_mask
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps, scale_betas=1.):
     """
@@ -1259,7 +1260,22 @@ class GaussianDiffusion:
             model_kwargs = {}
         if noise is None:
             noise = th.randn_like(x_start)
+            
         x_t = self.q_sample(x_start, t, noise=noise)
+        
+        #TODO: Masking if we want to input the clean signal in some dimension
+        if dataset.finetune_with_mask:
+            mask_idx = model_kwargs['y']['mask_idx']
+            input_mask = gen_mask.gen_mask(mask_ratio=dataset.opt.finetune_mask_ratio, shape=x_t.shape, mask_idx=mask_idx)
+            loss_mask = gen_mask.gen_mask(mask_ratio=0, shape=x_t.shape, mask_idx=mask_idx)
+            x_t = (x_t * ~input_mask) + (x_start * input_mask)
+        else:
+            # Used the default mask if not finetuning with 2D
+            mask = mask
+            
+        
+        
+        # if dataset.opt.finetune_mask_ratio:
 
         terms = {}
 
@@ -1308,7 +1324,12 @@ class GaussianDiffusion:
             }[self.model_mean_type]
             assert model_output.shape == target.shape == x_start.shape  # [bs, njoints, nfeats, nframes]
 
-            terms["rot_mse"] = self.masked_l2(target, model_output, mask) # mean_flat(rot_mse)
+            # terms["rot_mse"] shape = [B]
+            if dataset.opt.finetune_mask_ratio:
+                terms["rot_mse"] = self.masked_l2(target, model_output, loss_mask)  # mean_flat(rot_mse)
+            else: 
+                terms["rot_mse"] = self.masked_l2(target, model_output, mask) # mean_flat(rot_mse)
+            #TODO: Can edit the mask so we can pass the mask that we want
 
             target_xyz, model_output_xyz = None, None
 
