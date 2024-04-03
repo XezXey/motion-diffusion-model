@@ -27,7 +27,10 @@ def collate(batch):
     else:
         lenbatch = [len(b['inp'][0][0]) for b in notnone_batches]
         
-    motionname_batch = [b['motion_name'] for b in notnone_batches]
+    if 'motion_name' in notnone_batches[0].keys():
+        motionname_batch = [b['motion_name'] for b in notnone_batches]
+    else:
+        motionname_batch = None
 
 
     databatchTensor = collate_tensors(databatch)

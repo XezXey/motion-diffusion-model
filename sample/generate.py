@@ -37,6 +37,14 @@ def main():
             out_path += '_' + args.text_prompt.replace(' ', '_').replace('.', '')
         elif args.input_text != '':
             out_path += '_' + os.path.basename(args.input_text).replace('.txt', '').replace(' ', '_').replace('.', '')
+    else:
+        model_name = os.path.dirname(args.model_path).split('/')[-1]
+        out_path += os.path.join(model_name,
+                                'samples_{}_{}_seed{}'.format(name, niter, args.seed))
+        if args.text_prompt != '':
+            out_path += '_' + args.text_prompt.replace(' ', '_').replace('.', '')
+        elif args.input_text != '':
+            out_path += '_' + os.path.basename(args.input_text).replace('.txt', '').replace(' ', '_').replace('.', '')
 
     # this block must be called BEFORE the dataset is loaded
     if args.text_prompt != '':
@@ -185,6 +193,7 @@ def main():
             caption = all_text[rep_i*args.batch_size + sample_i]
             length = all_lengths[rep_i*args.batch_size + sample_i]
             motion = all_motions[rep_i*args.batch_size + sample_i].transpose(2, 0, 1)[:length]
+            # print(motion, motion.shape)
             save_file = sample_file_template.format(sample_i, rep_i)
             print(sample_print_template.format(caption, sample_i, rep_i, save_file))
             animation_save_path = os.path.join(out_path, save_file)

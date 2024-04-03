@@ -221,15 +221,15 @@ class Text2MotionDatasetV2(data.Dataset):
         motion_dir = [opt.motion_dir] * len(id_list)
         text_dir = [opt.text_dir] * len(id_list)
         
-        
         if opt.finetune_with_mask:
+            print(f"[#] Finetuning with mask {opt.finetune_clean_mask_ratio}, {opt.finetune_motion_dir}, {opt.finetune_text_dir}, {opt.finetune_extra_samples_name}")
             self.finetune_extra_samples_name = []
             with cs.open(opt.finetune_extra_samples_name, 'r') as f:
                 for line in f.readlines():
                     id_list.append(line.strip())
                     self.finetune_extra_samples_name.append(line.strip())
-        motion_dir = motion_dir + [opt.finetune_motion_dir] * len(self.finetune_extra_samples_name)
-        text_dir = text_dir + [opt.finetune_text_dir] * len(self.finetune_extra_samples_name)
+            motion_dir = motion_dir + [opt.finetune_motion_dir] * len(self.finetune_extra_samples_name)
+            text_dir = text_dir + [opt.finetune_text_dir] * len(self.finetune_extra_samples_name)
         
         assert len(motion_dir) == len(id_list) == len(text_dir)
         new_name_list = []

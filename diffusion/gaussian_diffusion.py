@@ -1266,6 +1266,7 @@ class GaussianDiffusion:
         #TODO: Masking if we want to input the clean signal in some dimension
         finetune_with_mask = dataset.t2m_dataset.opt.finetune_with_mask
         if finetune_with_mask:
+            # print("Using mask")
             mask_ratio = dataset.t2m_dataset.opt.finetune_clean_mask_ratio
             mask_idx = []
             for name in dataset.t2m_dataset.finetune_extra_samples_name:

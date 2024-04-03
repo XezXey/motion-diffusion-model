@@ -33,14 +33,15 @@ def get_opt(opt_path, device):
     skip = ('-------------- End ----------------',
             '------------ Options -------------',
             '\n')
-    print('Reading', opt_path)
+    print('[#] Reading: ', opt_path)
     with open(opt_path) as f:
         for line in f:
             if line.strip() not in skip:
                 # print(line.strip())
                 key, value = line.strip().split(': ')
                 if value in ('True', 'False'):
-                    opt_dict[key] = bool(value)
+                    # opt_dict[key] = bool(value)
+                    opt_dict[key] = True if value == 'True' else False
                 elif is_float(value):
                     opt_dict[key] = float(value)
                 elif is_number(value):
@@ -48,8 +49,9 @@ def get_opt(opt_path, device):
                 else:
                     opt_dict[key] = str(value)
 
-    print(opt)
-    print("[#] Data root: ", opt.data_root)
+    # print(opt)
+    # print("[#] Data root: ", opt.data_root)
+    # exit()
     opt_dict['which_epoch'] = 'latest'
     opt.save_root = pjoin(opt.checkpoints_dir, opt.dataset_name, opt.name)
     opt.model_dir = pjoin(opt.save_root, 'model')

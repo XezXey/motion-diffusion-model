@@ -19,6 +19,8 @@ def main():
     train_platform_type = eval(args.train_platform_type)
     train_platform = train_platform_type(args.save_dir)
     train_platform.report_args(args, name='Args')
+    # print(args)
+    # exit()
 
     if args.save_dir is None:
         raise FileNotFoundError('save_dir was not specified.')
