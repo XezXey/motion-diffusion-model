@@ -1,4 +1,5 @@
 import torch
+import time
 from torch.utils import data
 import numpy as np
 import os
@@ -221,8 +222,9 @@ class Text2MotionDatasetV2(data.Dataset):
         motion_dir = [opt.motion_dir] * len(id_list)
         text_dir = [opt.text_dir] * len(id_list)
         
-        if opt.finetune_with_mask:
-            print(f"[#] Finetuning with mask {opt.finetune_clean_mask_ratio}, {opt.finetune_motion_dir}, {opt.finetune_text_dir}, {opt.finetune_extra_samples_name}")
+        if opt.finetune:
+            print(f"[#] Finetuning Mask={opt.finetune_with_mask}, {opt.finetune_clean_mask_ratio}, {opt.finetune_motion_dir}, {opt.finetune_text_dir}, {opt.finetune_extra_samples_name}")
+            time.sleep(5)
             self.finetune_extra_samples_name = []
             with cs.open(opt.finetune_extra_samples_name, 'r') as f:
                 for line in f.readlines():
@@ -236,8 +238,6 @@ class Text2MotionDatasetV2(data.Dataset):
         length_list = []
         for i, name in tqdm(enumerate(id_list)):
             try:
-                if 'cr7' in name:
-                    print("CR7")
                 motion = np.load(pjoin(motion_dir[i], name + '.npy'))
                 print(f"[#] Motion length of {name} is {len(motion)}...")
                 if (len(motion)) < min_motion_len or (len(motion) >= 200):
@@ -264,7 +264,6 @@ class Text2MotionDatasetV2(data.Dataset):
                         else:
                             try:
                                 n_motion = motion[int(f_tag*20) : int(to_tag*20)]
-                                # print(n_motion)
                                 if (len(n_motion)) < min_motion_len or (len(n_motion) >= 200):
                                     print(f"[#] Motion length of {name} is {len(n_motion)}... skipping...")
                                     continue
@@ -349,6 +348,8 @@ class Text2MotionDatasetV2(data.Dataset):
             m_length = (m_length // self.opt.unit_length - 1) * self.opt.unit_length
         elif coin2 == 'single':
             m_length = (m_length // self.opt.unit_length) * self.opt.unit_length
+        
+        # Trimming the motion in max_length=196
         idx = random.randint(0, len(motion) - m_length)
         motion = motion[idx:idx+m_length]
 
@@ -356,6 +357,7 @@ class Text2MotionDatasetV2(data.Dataset):
         motion = (motion - self.mean) / self.std
 
         if m_length < self.max_motion_length:
+            # Padding
             motion = np.concatenate([motion,
                                      np.zeros((self.max_motion_length - m_length, motion.shape[1]))
                                      ], axis=0)

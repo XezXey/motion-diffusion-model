@@ -1264,6 +1264,7 @@ class GaussianDiffusion:
         x_t = self.q_sample(x_start, t, noise=noise)
         
         #TODO: Masking if we want to input the clean signal in some dimension
+        finetune = dataset.t2m_dataset.opt.finetune
         finetune_with_mask = dataset.t2m_dataset.opt.finetune_with_mask
         if finetune_with_mask:
             # print("Using mask")
