@@ -1,0 +1,3 @@
+a man doing stepover dribbling.#a/DET man/NOUN doing/VERB stepover/NOUN dribbling/NOUN#0.0#0.0
+soccer movement.#scissor/NOUN movement/NOUN#0.0#0.0
+a man moves his leg in a circular movement.#a/DET man/NOUN moves/VERB his/PRON leg/NOUN in/ADP a/DET circular/ADJ movement/NOUN#0.0#0.0

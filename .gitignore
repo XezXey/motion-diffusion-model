@@ -130,4 +130,5 @@ dmypy.json
 
 # Files and Folders
 save/
-dataset/
+dataset/HumanML3D
+dataset/KIT-ML
