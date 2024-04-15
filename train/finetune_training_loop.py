@@ -68,7 +68,8 @@ class TrainLoop:
             self.mp_trainer.master_params, lr=self.lr, weight_decay=self.weight_decay
         )
         if self.resume_step:
-            pass
+            pass    
+            #NOTE: Fix following the PriorMDM: https://github.com/priorMDM/priorMDM/blob/b64123fc580d567a45af3d12aaa02c7f7ec4cf0a/train/train_mdm_motion_control.py#L73
             # self._load_optimizer_state()
             # Model was resumed, either due to a restart or a checkpoint
             # being specified at the command line.
@@ -110,11 +111,11 @@ class TrainLoop:
             state_dict = torch.load(resume_checkpoint, map_location=dist_util.dev())
             model_util.load_model_wo_clip(self.model, state_dict)
             self.model.to(dist_util.dev())
-            # self.model.load_state_dict(
-            #     dist_util.load_state_dict(
-            #         resume_checkpoint, map_location=dist_util.dev()
-            #     )
-            # )
+            self.model.load_state_dict(
+                dist_util.load_state_dict(
+                    resume_checkpoint, map_location=dist_util.dev()
+                ), strict=False
+            )
 
     def _load_optimizer_state(self):
         main_checkpoint = find_resume_checkpoint() or self.resume_checkpoint

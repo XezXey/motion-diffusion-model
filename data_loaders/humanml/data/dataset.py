@@ -223,7 +223,10 @@ class Text2MotionDatasetV2(data.Dataset):
         text_dir = [opt.text_dir] * len(id_list)
         
         if opt.finetune:
-            print(f"[#] Finetuning Mask={opt.finetune_with_mask}, {opt.finetune_clean_mask_ratio}, {opt.finetune_motion_dir}, {opt.finetune_text_dir}, {opt.finetune_extra_samples_name}")
+            print(f"[#] Finetuning Mask = {opt.finetune_with_mask}")
+            print(f"[#] Finetuning loss weight = {opt.finetune_loss_weight}")
+            print(f"[#] Mask_ratio = {opt.finetune_clean_mask_ratio}")
+            print(f"[#] Finetuning with extra samples from {opt.finetune_motion_dir}, {opt.finetune_text_dir}, {opt.finetune_extra_samples_name}")
             time.sleep(5)
             self.finetune_extra_samples_name = []
             with cs.open(opt.finetune_extra_samples_name, 'r') as f:
@@ -239,7 +242,7 @@ class Text2MotionDatasetV2(data.Dataset):
         for i, name in tqdm(enumerate(id_list)):
             try:
                 motion = np.load(pjoin(motion_dir[i], name + '.npy'))
-                # print(f"[#] Motion length of {name} is {len(motion)}...")
+                print(f"[#] Motion length of {name} is {len(motion)}...")
                 if (len(motion)) < min_motion_len or (len(motion) >= 200):
                     print(f"[#] Motion length of {name} is {len(motion)}... skipping...")
                     continue
