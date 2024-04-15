@@ -1,3 +1,0 @@
-soccer dribbling in a circular movement.#soccer/NOUN dribbling/NOUN in/ADP a/DET circular/ADJ movement/NOUN#0.0#0.0
-a man performing a stepover.#a/DET man/NOUN performing/VERB a/DET stepover/NOUN#0.0#0.0
-stepover dribbling in a circular movement.#stepover/NOUN dribbling/NOUN in/ADP a/DET circular/ADJ movement/NOUN#0.0#0.0

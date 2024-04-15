@@ -1,3 +1,0 @@
-a man dancing gangnam style.#a/DET man/NOUN dancing/VERB a/DET gangnam/NOUN style/NOUN#0.0#0.0
-a man performing a gangnam style dance.#a/DET man/NOUN performing/VERB a/DET gangnam/NOUN style/NOUN dance/NOUN#0.0#0.0
-a man is doing a gangnam style.#a/DET man/NOUN is/PREP doing/VERB a/DET gangnam/NOUN style/NOUN#0.0#0.0

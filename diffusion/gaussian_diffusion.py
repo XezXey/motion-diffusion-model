@@ -638,6 +638,10 @@ class GaussianDiffusion:
         final = None
         if dump_steps is not None:
             dump = []
+            
+        if 'text' in model_kwargs['y'].keys():
+            # encoding once instead of each iteration saves lots of time # From commit 94c173f
+            model_kwargs['y']['text_embed'] = model.encode_text(model_kwargs['y']['text'])
 
         for i, sample in enumerate(self.p_sample_loop_progressive(
             model,
@@ -1263,40 +1267,26 @@ class GaussianDiffusion:
             
         x_t = self.q_sample(x_start, t, noise=noise)
         
-        #TODO: Masking if we want to input the clean signal in some dimension
         finetune = dataset.t2m_dataset.opt.finetune
         finetune_with_mask = dataset.t2m_dataset.opt.finetune_with_mask
-        if finetune_with_mask:
-            # print("Using mask")
-            # mask_ratio = dataset.t2m_dataset.opt.finetune_clean_mask_ratio
-            mask_idx = []
+        if finetune:
+            #NOTE: Finding the fine-tuning sample's indices
+            finetune_idx = []
             for name in dataset.t2m_dataset.finetune_extra_samples_name:
                 if name in model_kwargs['y']['motion_name']:
-                    print(name)
-                    mask_idx.append(model_kwargs['y']['motion_name'].index(name))
-            # input_mask, _ = gen_mask.gen_mask(mask_ratio=mask_ratio, shape=x_t.shape, mask_idx=mask_idx)
-            # exit()
-            loss_mask, mask_idx = gen_mask.gen_mask(mask_ratio=0, shape=x_t.shape, mask_idx=mask_idx)
-            # input_mask = th.tensor(input_mask).to(x_t.device).to(th.bool)
-            loss_mask = th.tensor(loss_mask).to(x_t.device).to(th.bool)
-            # Multiply the mask with the loss mask to maintain the padding in the loss mask
-            loss_mask = loss_mask * mask
-            loss_mask_weight = th.ones(loss_mask.shape[0]).to(th.float32).to(x_t.device)
-            loss_mask_weight[mask_idx] = dataset.t2m_dataset.opt.finetune_loss_mask_weight
-            # print(loss_mask_weight)
-            # if len(mask_idx) > 0:
-            #     input()
-            # print(model_kwargs['y']['motion_name'])
-            # print(mask_idx)
-            # if len(mask_idx) > 0:
-            #     print(mask_idx)
-            #     print(loss_mask.shape)
-            #     print(loss_mask[0, :, :, 0:1].reshape(-1))
-            #     print(loss_mask[mask_idx[0], :, :, 0:1].reshape(-1))
-            #     print(loss_mask[mask_idx[0]+1, :, :, 0:1].reshape(-1))
-            #     print(loss_mask[mask_idx[0]-1, :, :, 0:1].reshape(-1))
-            #     input()
-            # x_t = (x_t * (~input_mask)) + (x_start * input_mask)
+                    finetune_idx.append(model_kwargs['y']['motion_name'].index(name))
+                    print(f"[#] Found new samples: {name} at index {finetune_idx[-1]}.")
+            
+            if finetune_with_mask:
+                #NOTE: Masking if we want to input the clean signal in some dimension
+                loss_mask, _ = gen_mask.gen_mask(mask_ratio=0, shape=x_t.shape, mask_idx=finetune_idx)
+                loss_mask = th.tensor(loss_mask).to(x_t.device).to(th.bool)
+                # Multiply the mask with the loss mask to maintain the padding in the loss mask
+                loss_mask = loss_mask * mask
+                
+            #NOTE: Finetuning loss weight
+            finetune_loss_weight = th.ones(x_t.shape[0]).to(th.float32).to(x_t.device)
+            finetune_loss_weight[finetune_idx] = dataset.t2m_dataset.opt.finetune_loss_weight
         else:
             # Used the default mask if not finetuning with 2D
             mask = mask
@@ -1353,12 +1343,15 @@ class GaussianDiffusion:
             assert model_output.shape == target.shape == x_start.shape  # [bs, njoints, nfeats, nframes]
 
             # terms["rot_mse"] shape = [B]
-            if finetune_with_mask:
-                # print(self.masked_l2(target, model_output, loss_mask).shape, loss_mask_weight.shape)
-                terms["rot_mse"] = self.masked_l2(target, model_output, loss_mask) * loss_mask_weight  # mean_flat(rot_mse)
+            if finetune:
+                if finetune_with_mask:
+                    # print(self.masked_l2(target, model_output, loss_mask).shape, loss_mask_weight.shape)
+                    terms["rot_mse"] = self.masked_l2(target, model_output, loss_mask) * finetune_loss_weight  # mean_flat(rot_mse)
+                else: 
+                    terms["rot_mse"] = self.masked_l2(target, model_output, mask) * finetune_loss_weight # mean_flat(rot_mse)
+                    # raise NotImplementedError("[#] Finetuning is enabled. But mode is not set to finetune_with_mask = True")
             else: 
                 terms["rot_mse"] = self.masked_l2(target, model_output, mask) # mean_flat(rot_mse)
-            #TODO: Can edit the mask so we can pass the mask that we want
 
             target_xyz, model_output_xyz = None, None
 

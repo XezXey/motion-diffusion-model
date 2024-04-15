@@ -239,7 +239,7 @@ class Text2MotionDatasetV2(data.Dataset):
         for i, name in tqdm(enumerate(id_list)):
             try:
                 motion = np.load(pjoin(motion_dir[i], name + '.npy'))
-                print(f"[#] Motion length of {name} is {len(motion)}...")
+                # print(f"[#] Motion length of {name} is {len(motion)}...")
                 if (len(motion)) < min_motion_len or (len(motion) >= 200):
                     print(f"[#] Motion length of {name} is {len(motion)}... skipping...")
                     continue
