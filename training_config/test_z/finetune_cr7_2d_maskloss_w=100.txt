@@ -56,7 +56,7 @@ unit_length: 4
 finetune: True
 finetune_with_mask: True
 finetune_clean_mask_ratio: 0
-finetune_loss_mask_weight: 100
+finetune_loss_weight: 100
 finetune_extra_samples_name: /data/mint/CR7/dataset/MDM_Dataset/Finetuning_set/cr7/cr7_mask_samples.txt
 finetune_motion_dir: /data/mint/CR7/dataset/MDM_Dataset/Finetuning_set/cr7/new_joint_vecs/
 finetune_text_dir: /data/mint/CR7/dataset/MDM_Dataset/Finetuning_set/cr7/texts/
