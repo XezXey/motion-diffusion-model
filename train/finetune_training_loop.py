@@ -18,6 +18,7 @@ from diffusion.resample import create_named_schedule_sampler
 from data_loaders.humanml.networks.evaluator_wrapper import EvaluatorMDMWrapper
 from eval import eval_humanml, eval_humanact12_uestc
 from data_loaders.get_data import get_dataset_loader
+from diffusion.nn import update_ema
 
 
 # For ImageNet experiments, this was a good default value.
@@ -38,6 +39,11 @@ class TrainLoop:
         self.batch_size = args.batch_size
         self.microbatch = args.batch_size  # deprecating this option
         self.lr = args.lr
+        self.ema_rate = (
+            [args.ema_rate]
+            if isinstance(args.ema_rate, float)
+            else [float(x) for x in args.ema_rate.split(",")]
+        )
         self.log_interval = args.log_interval
         self.save_interval = args.save_interval
         self.resume_checkpoint = args.resume_checkpoint
@@ -67,8 +73,15 @@ class TrainLoop:
         self.opt = AdamW(
             self.mp_trainer.master_params, lr=self.lr, weight_decay=self.weight_decay
         )
+        
+        self.ema_params = [
+            copy.deepcopy(self.mp_trainer.master_params)
+            for _ in range(len(self.ema_rate))
+        ]
         if self.resume_step:
-            pass    
+            self.ema_params = [
+                self._load_ema_parameters(rate) for rate in self.ema_rate
+            ]
             #NOTE: Fix following the PriorMDM: https://github.com/priorMDM/priorMDM/blob/b64123fc580d567a45af3d12aaa02c7f7ec4cf0a/train/train_mdm_motion_control.py#L73
             # self._load_optimizer_state()
             # Model was resumed, either due to a restart or a checkpoint
@@ -107,7 +120,7 @@ class TrainLoop:
 
         if resume_checkpoint:
             self.resume_step = parse_resume_step_from_filename(resume_checkpoint)
-            logger.log(f"loading model from checkpoint: {resume_checkpoint}...")
+            logger.log(f"[#] loading model from checkpoint: {resume_checkpoint}...")
             state_dict = torch.load(resume_checkpoint, map_location=dist_util.dev())
             model_util.load_model_wo_clip(self.model, state_dict)
             self.model.to(dist_util.dev())
@@ -116,6 +129,21 @@ class TrainLoop:
                     resume_checkpoint, map_location=dist_util.dev()
                 ), strict=False
             )
+            
+    def _load_ema_parameters(self, rate):
+        ema_params = copy.deepcopy(self.mp_trainer.master_params)
+
+        main_checkpoint = find_resume_checkpoint() or self.resume_checkpoint
+        ema_checkpoint = find_ema_checkpoint(main_checkpoint, self.resume_step, rate)
+        if ema_checkpoint:
+            logger.log(f"[#] loading EMA from checkpoint: {ema_checkpoint}...")
+            state_dict = dist_util.load_state_dict(
+                ema_checkpoint, map_location=dist_util.dev()
+            )
+            ema_params = self.mp_trainer.state_dict_to_master_params(state_dict)
+
+        return ema_params
+
 
     def _load_optimizer_state(self):
         main_checkpoint = find_resume_checkpoint() or self.resume_checkpoint
@@ -211,7 +239,9 @@ class TrainLoop:
 
     def run_step(self, batch, cond):
         self.forward_backward(batch, cond)
-        self.mp_trainer.optimize(self.opt)
+        took_step = self.mp_trainer.optimize(self.opt)
+        if took_step:
+            self._update_ema()
         self._anneal_lr()
         self.log_step()
 
@@ -251,6 +281,10 @@ class TrainLoop:
                 self.diffusion, t, {k: v * weights for k, v in losses.items()}
             )
             self.mp_trainer.backward(loss)
+            
+    def _update_ema(self):
+        for rate, params in zip(self.ema_rate, self.ema_params):
+            update_ema(params, self.mp_trainer.master_params, rate=rate)
 
     def _anneal_lr(self):
         if not self.lr_anneal_steps:
@@ -265,12 +299,15 @@ class TrainLoop:
         logger.logkv("samples", (self.step + self.resume_step + 1) * self.global_batch)
 
 
-    def ckpt_file_name(self):
-        return f"model{(self.step+self.resume_step):09d}.pt"
-
+    def ckpt_file_name(self, rate):
+        if not rate:
+            filename = f"model{(self.step+self.resume_step):09d}.pt"
+        else:
+            filename = f"ema_{rate}_{(self.step+self.resume_step):09d}.pt"
+        return filename
 
     def save(self):
-        def save_checkpoint(params):
+        def save_checkpoint(rate, params):
             state_dict = self.mp_trainer.master_params_to_state_dict(params)
 
             # Do not save CLIP weights
@@ -278,19 +315,20 @@ class TrainLoop:
             for e in clip_weights:
                 del state_dict[e]
 
-            logger.log(f"saving model...")
-            filename = self.ckpt_file_name()
+            filename = self.ckpt_file_name(rate)
+            logger.log(f"[#] Saving model: name = {filename}...")
             with bf.BlobFile(bf.join(self.save_dir, filename), "wb") as f:
                 torch.save(state_dict, f)
 
-        save_checkpoint(self.mp_trainer.master_params)
+        save_checkpoint(0, self.mp_trainer.master_params)
+        for rate, params in zip(self.ema_rate, self.ema_params):
+            save_checkpoint(rate, params)
 
         with bf.BlobFile(
             bf.join(self.save_dir, f"opt{(self.step+self.resume_step):09d}.pt"),
             "wb",
         ) as f:
             torch.save(self.opt.state_dict(), f)
-
 
 def parse_resume_step_from_filename(filename):
     """
@@ -306,7 +344,6 @@ def parse_resume_step_from_filename(filename):
     except ValueError:
         return 0
 
-
 def get_blob_logdir():
     # You can change this to be a separate path to save checkpoints to
     # a blobstore or some external drive.
@@ -316,6 +353,15 @@ def get_blob_logdir():
 def find_resume_checkpoint():
     # On your infrastructure, you may want to override this to automatically
     # discover the latest checkpoint on your blob storage, etc.
+    return None
+
+def find_ema_checkpoint(main_checkpoint, step, rate):
+    if main_checkpoint is None:
+        return None
+    filename = f"ema_{rate}_{(step):06d}.pt"
+    path = bf.join(bf.dirname(main_checkpoint), filename)
+    if bf.exists(path):
+        return path
     return None
 
 

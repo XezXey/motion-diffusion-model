@@ -239,7 +239,7 @@ class Text2MotionDatasetV2(data.Dataset):
         assert len(motion_dir) == len(id_list) == len(text_dir)
         new_name_list = []
         length_list = []
-        for i, name in tqdm(enumerate(id_list)):
+        for i, name in tqdm(enumerate(id_list[:100])):
             try:
                 motion = np.load(pjoin(motion_dir[i], name + '.npy'))
                 print(f"[#] Motion length of {name} is {len(motion)}...")

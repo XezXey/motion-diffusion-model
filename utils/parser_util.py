@@ -61,7 +61,7 @@ def add_base_options(parser):
     group.add_argument("--device", default=0, type=int, help="Device id to use.")
     group.add_argument("--seed", default=10, type=int, help="For fixing random seed.")
     group.add_argument("--batch_size", default=64, type=int, help="Batch size during training.")
-    # My custom
+    # Finetuning customization
     group.add_argument("--datapath_txt", default='./dataset/humanml_opt.txt', type=str, help="Path to the txt file config.")
 
 
@@ -147,6 +147,8 @@ def add_training_options(parser):
                        help="Limit for the maximal number of frames. In HumanML3D and KIT this field is ignored.")
     group.add_argument("--resume_checkpoint", default="", type=str,
                        help="If not empty, will start from the specified checkpoint (path to model###.pt file).")
+    group.add_argument("--ema_rate", default="0.9999", type=str,
+                       help="Exponential moving average rate for saving the model weights (Comma-separated value).")
 
 
 def add_sampling_options(parser):
